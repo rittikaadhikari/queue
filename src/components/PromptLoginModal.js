@@ -4,13 +4,13 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap'
 
 const PromptLoginModal = props => (
   <Modal isOpen={props.isOpen}>
-    <ModalHeader>Session expired</ModalHeader>
+    <ModalHeader>RIP</ModalHeader>
     <ModalBody>
-      You&apos;ll need to log in again to continue.
+      Something went wrong. Reload to try again.
     </ModalBody>
     <ModalFooter>
-      <Button color="secondary" onClick={props.confirm}>
-        Log in
+      <Button color="primary" onClick={props.confirm}>
+        Reload
       </Button>
     </ModalFooter>
   </Modal>
