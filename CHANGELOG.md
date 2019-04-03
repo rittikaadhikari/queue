@@ -45,10 +45,6 @@ with the current semantic version and the next changes should go under a **[Next
 * Implement confidential queues. ([@jackieo5023](https://github.com/jackieo5023) and [@nwalters512](https://github.com/nwalters512) in [#230](https://github.com/illinois/queue/pull/230))
 * Implement programmatic admission control. ([@nwalters512](https://github.com/nwalters512) in [#228](https://github.com/illinois/queue/pull/228))
 
-## 6 March 2019
-
-* Add a button to delete all questions when the queue is closed. ([@rittikaadhikari](https://github.com/rittikaadhikari) in [#216](https://github.com/illinois/queue/pull/216)
-
 ## 19 February 2019
 
 * Fix queue message not being visible to students. ([@nwalters512](https://github.com/nwalters512) in [#214](https://github.com/illinois/queue/pull/214))
