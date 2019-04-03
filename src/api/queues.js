@@ -13,6 +13,8 @@ const {
   requireQueue,
   requireUser,
   failIfErrors,
+  isUserStudent,
+  filterConfidentialQueueQuestionsForUser,
 } = require('./util')
 
 const requireCourseStaffForQueue = require('../middleware/requireCourseStaffForQueue')
@@ -31,7 +33,11 @@ function validateLocation(req, res, next) {
 router.get(
   '/',
   safeAsync(async (req, res, _next) => {
-    const queues = await Queue.scope('questionCount').findAll()
+    const queuesResult = await Queue.scope(
+      'defaultScope',
+      'questionCount'
+    ).findAll()
+    const queues = queuesResult.map(queue => queue.get({ plain: true }))
     res.json(queues)
   })
 )
@@ -63,6 +69,7 @@ router.post(
       name: data.name,
       location: data.location,
       fixedLocation: data.fixedLocation === true,
+      isConfidential: req.body.isConfidential === true,
       courseId,
       createdByUserId: res.locals.userAuthn.id,
     })
@@ -79,8 +86,12 @@ router.get(
   '/:queueId',
   [requireQueue, failIfErrors],
   safeAsync(async (req, res, _next) => {
-    const { id: queueId } = res.locals.queue
-    const queue = await Queue.findOne({
+    const { id: queueId, courseId } = res.locals.queue
+    const { userAuthz } = res.locals
+    const isStudent = isUserStudent(userAuthz, courseId)
+
+    const scope = isStudent ? 'defaultScope' : 'courseStaff'
+    const queueResult = await Queue.scope(scope).findOne({
       where: {
         id: queueId,
       },
@@ -93,6 +104,7 @@ router.get(
           },
           required: false,
           include: [User],
+          attributes: ['startTime', 'endTime'],
         },
         {
           model: Question,
@@ -100,10 +112,47 @@ router.get(
           where: {
             dequeueTime: null,
           },
+          attributes: [
+            'id',
+            'name',
+            'topic',
+            'beingAnswered',
+            'answerStartTime',
+            'enqueueTime',
+            'dequeueTime',
+            'askedById',
+          ],
         },
       ],
       order: [[Question, 'id', 'ASC']],
     })
+    // Convert to plain object that we can manipulate/filter/etc. before
+    // sending back to the client
+    const queue = queueResult.get({ plain: true })
+
+    // This is a workaround to https://github.com/sequelize/sequelize/issues/10552
+    // TODO remove this once the issue is fixed in sequelize
+    queue.questions = queue.questions.map(question => {
+      if (!question.beingAnswered) {
+        return question
+      }
+      const { answeredBy } = question
+      answeredBy.name = answeredBy.preferredName || answeredBy.universityName
+      return { ...question, answeredBy }
+    })
+
+    // If this is a confidential queue, don't send any actual question data
+    // back to the client, besides IDs
+    if (queue.isConfidential) {
+      if (isStudent) {
+        const { id: userId } = res.locals.userAuthn
+        const filtered = filterConfidentialQueueQuestionsForUser(
+          userId,
+          queue.questions
+        )
+        queue.questions = filtered
+      }
+    }
 
     res.json(queue)
   })
@@ -125,6 +174,10 @@ router.patch(
     check('messageEnabled')
       .optional({ nullable: true })
       .isBoolean(),
+    check('admissionControlEnabled')
+      .optional({ nullable: true })
+      .isBoolean(),
+    check('admissionControlUrl').optional({ nullable: true }),
     validateLocation,
     failIfErrors,
   ],
@@ -139,6 +192,14 @@ router.patch(
       message: data.message !== null ? data.message : undefined,
       messageEnabled:
         data.messageEnabled !== null ? data.messageEnabled : undefined,
+      admissionControlEnabled:
+        data.admissionControlEnabled !== null
+          ? data.admissionControlEnabled
+          : undefined,
+      admissionControlUrl:
+        data.admissionControlUrl !== null
+          ? data.admissionControlUrl
+          : undefined,
     })
 
     const updatedQueue = await Queue.scope('questionCount').findOne({

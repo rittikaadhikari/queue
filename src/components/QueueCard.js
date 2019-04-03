@@ -5,39 +5,24 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faMapMarker,
   faQuestionCircle,
+  faEyeSlash,
 } from '@fortawesome/free-solid-svg-icons'
 
+import { Router } from '../routes'
 import ShowForCourseStaff from './ShowForCourseStaff'
 
-const QueueCard = ({
-  queue,
-  courseName,
-  open,
-  onDelete,
-  onUpdate,
-  ...rest
-}) => {
-  const { name: queueName, location, questionCount } = queue
+const QueueCard = ({ queue, courseName, open, ...rest }) => {
+  const { name: queueName, location, questionCount, isConfidential } = queue
 
   const questionCountText = `${questionCount} Question${
     questionCount !== 1 ? 's' : ''
   }`
   const locationText = location || 'No location specified'
 
-  const handleDelete = e => {
+  const handleSettings = e => {
     e.stopPropagation()
     e.preventDefault()
-    onDelete()
-  }
-
-  const handleUpdate = e => {
-    e.stopPropagation()
-    e.preventDefault()
-    onUpdate()
-  }
-
-  const preventKeyBubbleUp = e => {
-    e.stopPropagation()
+    Router.pushRoute('queueSettings', { id: queue.id })
   }
 
   const title = courseName || queueName
@@ -50,35 +35,33 @@ const QueueCard = ({
     >
       <CardBody>
         <CardTitle className="d-flex flex-wrap align-items-center">
-          <span className="h5 mb-2 mr-auto pr-3">{title}</span>
+          <span className="h5 mb-2 mr-auto pr-3">
+            {isConfidential && !showQueueNameInBody && (
+              <FontAwesomeIcon icon={faEyeSlash} fixedWidth className="mr-2" />
+            )}
+            {title}
+          </span>
           <div>
             <ShowForCourseStaff courseId={queue.courseId}>
               <Button
-                color="danger"
+                color="secondary"
                 size="sm"
                 outline
-                onClick={handleDelete}
-                onKeyPress={preventKeyBubbleUp}
+                onClick={handleSettings}
+                onKeyPress={handleSettings}
               >
-                Delete
-              </Button>
-            </ShowForCourseStaff>
-            <ShowForCourseStaff courseId={queue.courseId}>
-              <Button
-                color="primary"
-                size="sm"
-                className="mr-0 ml-1"
-                outline
-                onClick={handleUpdate}
-                onKeyPress={preventKeyBubbleUp}
-              >
-                Edit
+                Settings
               </Button>
             </ShowForCourseStaff>
           </div>
         </CardTitle>
         {showQueueNameInBody && (
-          <CardSubtitle className="mb-2">{queueName}</CardSubtitle>
+          <CardSubtitle className="mb-2">
+            {isConfidential && (
+              <FontAwesomeIcon icon={faEyeSlash} fixedWidth className="mr-2" />
+            )}
+            {queueName}
+          </CardSubtitle>
         )}
         <div className="text-muted">
           <FontAwesomeIcon icon={faMapMarker} fixedWidth className="mr-2" />
@@ -120,8 +103,6 @@ QueueCard.propTypes = {
   }).isRequired,
   courseName: PropTypes.string,
   open: PropTypes.bool,
-  onUpdate: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
 }
 
 export default QueueCard

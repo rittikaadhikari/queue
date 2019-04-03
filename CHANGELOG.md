@@ -2,12 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 Each PR must be accompanied by one or more corresponding changelog entries.
-When a new version is deployed, the changes since the last deploy should be labeled
-with the current date and the next changes should go under a **[Next]** header.
+When a new version is tagged, the changes since the last deploy should be labeled
+with the current semantic version and the next changes should go under a **[Next]** header.
 
 ## [Next]
+
+* Fix logic for filtering confidential questions. ([@james9909](https://github.com/james9909) in [#257](https://github.com/illinois/queue/pull/257))
+
+## v1.0.4
+
+* Rebrand to Stack@Illinois. ([@nwalters512](https://github.com/nwalters512) in [#256](https://github.com/illinois/queue/pull/256))
+
+## v1.0.3
+
+* Add user-facing warning about socket errors to help track down [#241](https://github.com/illinois/queue/issues/241). ([@nwalters512](https://github.com/nwalters512) in [#250](https://github.com/illinois/queue/pull/250))
+* Fix staff names not showing up on answering badges. ([@james9909](https://github.com/james9909) in [#249](https://github.com/illinois/queue/pull/249))
+
+## v1.0.2
+
+* Add debugging logs to help track down [#241](https://github.com/illinois/queue/issues/241). ([@nwalters512](https://github.com/nwalters512) in [#242](https://github.com/illinois/queue/pull/242))
+
+## v1.0.1
+
+* Allow course staff to access queue settings. ([@nwalters512](https://github.com/nwalters512) in [#239](https://github.com/illinois/queue/pull/239))
+* Fix user names not being shown on the course staff page. ([@nwalters512](https://github.com/nwalters512) in [#240](https://github.com/illinois/queue/pull/240))
+
+## v1.0.0
+*Note: prior to this release, versions were tagged based on the date they were deployed.*
+
+* Improve queue settings security. ([@james9909](https://github.com/james9909) in [#233](https://github.com/illinois/queue/pull/233))
+* Fix confidential queue not being shown correctly to course staff by using `isUserCourseStaffForQueue` instead of `isUserCourseStaff`. ([@jackieo5023](https://github.com/jackieo5023) in [#234](https://github.com/illinois/queue/pull/234))
+* Show course name on queue page. ([@nwalters512](https://github.com/nwalters512) in [#236](https://github.com/illinois/queue/pull/236))
+
+## 13 March 2019
+
 * Add user-facing error messages. ([@james9909](https://github.com/james9909) in [#195](https://github.com/illinois/queue/pull/195))
 * Validate queue when sending notifications to course staff. ([@james9909](https://github.com/james9909) in [#222](https://github.com/illinois/queue/pull/222))
+* Add a button to delete all questions when the queue is closed. ([@rittikaadhikari](https://github.com/rittikaadhikari) in [#216](https://github.com/illinois/queue/pull/216))
+* Sync logouts between tabs. ([@james9909](https://github.com/james9909) in [#215](https://github.com/illinois/queue/pull/215))
+* Fix promise not being awaited in bulk question deletion endpoint. ([@nwalters512](https://github.com/nwalters512) in [#229](https://github.com/illinois/queue/pull/229))
+* Add debugging prints to help identify cause of ActiveStaff query error. ([@nwalters512](https://github.com/nwalters512) in [#231](https://github.com/illinois/queue/pull/231))
+* Implement confidential queues. ([@jackieo5023](https://github.com/jackieo5023) and [@nwalters512](https://github.com/nwalters512) in [#230](https://github.com/illinois/queue/pull/230))
+* Implement programmatic admission control. ([@nwalters512](https://github.com/nwalters512) in [#228](https://github.com/illinois/queue/pull/228))
 
 ## 6 March 2019
 

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const url = require('url')
 
+const { Course } = require('../models')
 const { User } = require('../models')
 const { isDev } = require('../util')
 
@@ -47,12 +48,19 @@ module.exports.addJwtCookie = (req, res, user) => {
 }
 
 module.exports.getUserFromJwt = async token => {
+  if (!token) {
+    return null
+  }
   try {
     const jwtData = jwt.verify(token, JWT_SECRET)
     const netid = jwtData.sub
     const user = await User.findOne({ where: { netid } })
     return user
   } catch (e) {
+    // This is probably a bit overzealous, and will log for cases like a token
+    // expiring.
+    // TODO remove once https://github.com/illinois/queue/issues/241 is fixed
+    console.error(e)
     return null
   }
 }
@@ -61,4 +69,27 @@ module.exports.isSafeUrl = (req, redirect) => {
   const originUrl = new url.URL(`${req.protocol}://${req.get('host')}`)
   const redirectUrl = new url.URL(redirect, originUrl)
   return redirectUrl.host === originUrl.host
+}
+
+module.exports.getAuthzForUser = async user => {
+  const staffedCourses = await Course.findAll({
+    where: {
+      '$staff.id$': user.id,
+    },
+    attributes: ['id'],
+    include: [
+      {
+        model: User,
+        as: 'staff',
+        attributes: [],
+      },
+    ],
+    raw: true,
+  })
+  const staffedCourseIds = staffedCourses.map(row => row.id)
+
+  return {
+    isAdmin: user.isAdmin,
+    staffedCourseIds,
+  }
 }

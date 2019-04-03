@@ -11,20 +11,16 @@ import {
   fetchCourses,
   createCourse,
 } from '../actions/course'
-import {
-  fetchQueues,
-  createQueue,
-  deleteQueue,
-  updateQueue,
-} from '../actions/queue'
+import { fetchQueues, createQueue } from '../actions/queue'
 import { mapObjectToArray } from '../util'
 
 import PageWithUser from '../components/PageWithUser'
 import NewCourse from '../components/NewCourse'
 import NewQueue from '../components/NewQueue'
 import ShowForAdmin from '../components/ShowForAdmin'
-import QueueCardListContainer from '../containers/QueueCardListContainer'
 import DevWorkshopAd from '../components/DevWorkshopAd'
+import QueueCardListContainer from '../containers/QueueCardListContainer'
+import StackRebrandingAlert from '../components/StackRebrandingAlert'
 
 class Index extends React.Component {
   static async getInitialProps({ store, isServer }) {
@@ -118,6 +114,7 @@ class Index extends React.Component {
       <Fragment>
         <Container>
           <DevWorkshopAd />
+          <StackRebrandingAlert />
           <div className="d-flex flex-wrap align-items-center mb-4">
             <h1 className="display-4 d-inline-block mb-0 mt-3 mr-auto pr-3">
               Open queues
@@ -263,9 +260,6 @@ const mapDispatchToProps = dispatch => ({
   fetchQueues: () => dispatch(fetchQueues()),
   createCourse: course => dispatch(createCourse(course)),
   createQueue: (courseId, queue) => dispatch(createQueue(courseId, queue)),
-  updateQueue: (queueId, attributes) =>
-    dispatch(updateQueue(queueId, attributes)),
-  deleteQueue: (courseId, queueId) => dispatch(deleteQueue(courseId, queueId)),
 })
 
 export default connect(
