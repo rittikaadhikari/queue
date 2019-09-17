@@ -7,7 +7,7 @@ with the current semantic version and the next changes should go under a **[Next
 
 ## [Next]
 
-## v1.3.0
+## v2.0.0-alpha
 
 * Refactor authentication to support multiple logins and institutions. ([@nwalters512](https://github.com/nwalters512) in [#283](https://github.com/illinois/queue/pull/283))
 
