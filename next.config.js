@@ -7,6 +7,10 @@ module.exports = withTypescript(
     withCSS({
       useFileSystemPublicRoutes: false,
       assetPrefix: process.env.BASE_URL || '',
+      publicRuntimeConfig: {
+        uidName: 'email',
+        uidArticle: 'an',
+      },
     })
   )
 )

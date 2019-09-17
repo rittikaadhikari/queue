@@ -5,6 +5,7 @@ import {
   Card,
   CardHeader,
   CardTitle,
+  CardBody,
   ListGroup,
   ListGroupItem,
 } from 'reactstrap'
@@ -45,10 +46,9 @@ class CourseStaff extends React.Component {
     })
   }
 
-  addStaff(staff) {
-    const { netid, name } = staff
+  addStaff(userId) {
     const { courseId } = this.props
-    this.props.addCourseStaff(courseId, netid, name)
+    this.props.addCourseStaff(courseId, userId)
   }
 
   render() {
@@ -90,8 +90,13 @@ class CourseStaff extends React.Component {
                 {this.props.course && this.props.course.name} Staff
               </CardTitle>
             </CardHeader>
+            <CardBody>
+              <AddStaff
+                onAddStaff={userId => this.addStaff(userId)}
+                existingStaff={this.props.course.staff}
+              />
+            </CardBody>
             <ListGroup flush className="position-relative">
-              <AddStaff onAddStaff={staff => this.addStaff(staff)} />
               <FlipMove
                 enterAnimation="accordionVertical"
                 leaveAnimation="accordionVertical"
@@ -128,7 +133,7 @@ CourseStaff.propTypes = {
   users: PropTypes.objectOf(
     PropTypes.shape({
       id: PropTypes.number,
-      netid: PropTypes.string,
+      uid: PropTypes.string,
       name: PropTypes.string,
     })
   ).isRequired,
@@ -148,8 +153,8 @@ const mapStateToProps = (state, { courseId }) => ({
 
 const mapDispatchToProps = dispatch => ({
   fetchCourse: courseId => dispatch(fetchCourse(courseId)),
-  addCourseStaff: (courseId, netid, name) =>
-    dispatch(addCourseStaff(courseId, netid, name)),
+  addCourseStaff: (courseId, userId) =>
+    dispatch(addCourseStaff(courseId, userId)),
   removeCourseStaff: (courseId, userId) =>
     dispatch(removeCourseStaff(courseId, userId)),
   dispatch,
