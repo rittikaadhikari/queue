@@ -16,6 +16,11 @@ const { className, styles } = css.resolve`
     background-color: #cce5ff;
   }
 
+  :global(body.darkmode) .bg-primary-light {
+    color: inherit !important;
+    background-color: #375a7f !important;
+  }
+
   .bg-primary-light .card-header {
     background-color: #acd5ff;
   }
@@ -25,7 +30,7 @@ const { className, styles } = css.resolve`
   }
 
   .queue-message-expand {
-    transition: all 400ms;
+    transition: transform 400ms;
   }
 
   .queue-message-expand.open {
@@ -110,10 +115,14 @@ const QueueMessageViewer = props => {
 
 QueueMessageViewer.propTypes = {
   queueId: PropTypes.number.isRequired,
-  message: PropTypes.string.isRequired,
+  message: PropTypes.string,
   collapsible: PropTypes.bool.isRequired,
   editable: PropTypes.bool.isRequired,
   onEdit: PropTypes.func.isRequired,
+}
+
+QueueMessageViewer.defaultProps = {
+  message: '',
 }
 
 export default QueueMessageViewer

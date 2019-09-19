@@ -4,10 +4,10 @@ import HTTPStatus from 'http-status'
 import { Button } from 'reactstrap'
 
 import { Link } from '../routes'
+import { useTheme } from './ThemeProvider'
 
 const styles = {
   error: {
-    color: '#000',
     textAlign: 'center',
     display: 'flex',
     flexDirection: 'column',
@@ -33,18 +33,29 @@ const styles = {
 }
 
 const Error = props => {
+  const { isDarkMode } = useTheme()
   const { statusCode } = props
-  const title =
-    statusCode === 404
-      ? 'This page could not be found'
-      : HTTPStatus[statusCode] || 'An unexpected error has occurred'
+  const title = statusCode !== null ? statusCode : 'RIP'
+  let message
+  if (statusCode) {
+    message = HTTPStatus[statusCode] || 'RIP'
+  } else if (props.message) {
+    message = props.message || 'An unexpected error occurred'
+  } else {
+    message = 'An unexpected error occurred'
+  }
 
   return (
     <div style={styles.error}>
-      <h1 className="display-2">{statusCode || 'Error!'}</h1>
-      <h6>{title}.</h6>
+      <h1 className="display-2">{title}</h1>
+      <h6>{message}</h6>
       <Link passHref route="index">
-        <Button outline color="secondary" tag="a" className="mt-4">
+        <Button
+          outline
+          color={isDarkMode ? 'light' : 'secondary'}
+          tag="a"
+          className="mt-4"
+        >
           Go to homepage
         </Button>
       </Link>
@@ -54,10 +65,12 @@ const Error = props => {
 
 Error.defaultProps = {
   statusCode: 404,
+  message: null,
 }
 
 Error.propTypes = {
   statusCode: PropTypes.number,
+  message: PropTypes.string,
 }
 
 export default Error

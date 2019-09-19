@@ -1,7 +1,7 @@
 /* eslint-env jest */
 const redirectIfNeedsAuthn = require('./redirectIfNeedsAuthn')
 const { addJwtCookie } = require('../auth/util')
-const testutil = require('../../test/util')
+const testutil = require('../test/util')
 
 beforeAll(async () => {
   await testutil.setupTestDb()
@@ -57,7 +57,7 @@ describe('redirectIfNeedsAuthn middleware', () => {
     const { req, res, next } = makeArgs('/queue/1')
 
     addJwtCookie(req, res, {
-      netid: 'student',
+      uid: 'student@illinois.edu',
     })
     await redirectIfNeedsAuthn(req, res, next)
     expect(next).toBeCalled()

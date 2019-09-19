@@ -7,7 +7,39 @@ with the current semantic version and the next changes should go under a **[Next
 
 ## [Next]
 
+## v2.0.0-alpha
+
+* Refactor authentication to support multiple logins and institutions. ([@nwalters512](https://github.com/nwalters512) in [#283](https://github.com/illinois/queue/pull/283))
+
+## v1.2.1
+
+* Refine dark mode: better styles, new Bootstrap colors, and a custom select component. ([@nwalters512](https://github.com/nwalters512) in [#279](https://github.com/illinois/queue/pull/279))
+* Add TypeScript support to all build tooling; add some basic types to existing code. ([@nwalters512](https://github.com/nwalters512) in [#281](https://github.com/illinois/queue/pull/281))
+* Configure Express to know that we're running behind a proxy. ([@nwalters512](https://github.com/nwalters512) in [#284](https://github.com/illinois/queue/pull/284))
+
+## v1.2.0
+
+* Fix sequelize stream handling of bulk updates. ([@nwalters512](https://github.com/nwalters512) in [#270](https://github.com/illinois/queue/pull/270))
+* Add dark mode. ([@nwalters512](https://github.com/nwalters512) in [#273](https://github.com/illinois/queue/pull/273))
+* Hides the create queue button when creating a queue and the create course button when creating a course. ([@jackieo5023](https://github.com/jackieo5023) in [#274](https://github.com/illinois/queue/pull/274))
+* Fix double rendering of the course page. ([@james9909](https://github.com/james9909) in [#275](https://github.com/illinois/queue/pull/275))
+* Add improved styles, docs, and server-side rendering for dark mode. ([@nwalters512](https://github.com/nwalters512) in [#276](https://github.com/illinois/queue/pull/276))
+* Add personal access tokens for API access. ([@nwalters512](https://github.com/nwalters512) in [#271](https://github.com/illinois/queue/pull/271))
+
+## v1.1.0
+
+* Add page for admin management. ([@nwalters512](https://github.com/nwalters512) in [#265](https://github.com/illinois/queue/pull/265))
+* Update all dependencies. ([@nwalters512](https://github.com/nwalters512) in [#267](https://github.com/illinois/queue/pull/267))
+* Fix attributes missing from the GET queue endpoint. ([@james9909](https://github.com/james9909) in [#268](https://github.com/illinois/queue/pull/268))
+
+## v1.0.5
+
 * Fix logic for filtering confidential questions. ([@james9909](https://github.com/james9909) in [#257](https://github.com/illinois/queue/pull/257))
+* Add logging for new socket initialization error. ([@nwalters512](https://github.com/nwalters512) in [#258](https://github.com/illinois/queue/pull/258))
+* Remove unused style tag. ([@nwalters512](https://github.com/nwalters512) in [#259](https://github.com/illinois/queue/pull/259))
+* Fix active staff socket errors. ([@nwalters512](https://github.com/nwalters512) in [#262](https://github.com/illinois/queue/pull/262))
+* Rewrite queue page with hooks; fix miscellaneous bugs. ([@nwalters512](https://github.com/nwalters512) in [#263](https://github.com/illinois/queue/pull/263))
+* Rewrite queue setting page with hooks to fix bug with admission control "Update" button. ([@nwalters512](https://github.com/nwalters512) in [#264](https://github.com/illinois/queue/pull/264))
 
 ## v1.0.4
 

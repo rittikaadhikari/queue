@@ -4,12 +4,18 @@ import Document, { Head, Main, NextScript } from 'next/document'
 import flush from 'styled-jsx/server'
 import { dom } from '@fortawesome/fontawesome-svg-core'
 import moment from 'moment'
+import nextCookies from 'next-cookies'
 
 import { baseUrl, isDev, isNow } from '../util'
 
 export default class MyDocument extends Document {
-  static getInitialProps({ renderPage }) {
-    const { html, head, errorHtml, chunks } = renderPage()
+  static getInitialProps(ctx) {
+    const { html, head, errorHtml, chunks } = ctx.renderPage()
+    // This cookie is set on the client; we read it here to know if we should
+    // render the body with the 'darkmode' class on the server to avoid a flash
+    // of white background if darkmode is enabled
+    const { darkmode } = nextCookies(ctx)
+    const isDarkMode = darkmode === 'true'
     const styles = flush()
     return {
       html,
@@ -17,6 +23,7 @@ export default class MyDocument extends Document {
       errorHtml,
       chunks,
       styles,
+      isDarkMode,
     }
   }
 
@@ -42,7 +49,6 @@ export default class MyDocument extends Document {
             integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
             crossOrigin="anonymous"
           />
-          <link rel="stylesheet" href={`${baseUrl}/_next/static/style.css`} />
           <link
             rel="manifest"
             crossOrigin="use-credentials"
@@ -53,8 +59,7 @@ export default class MyDocument extends Document {
           <link rel="icon" href={faviconPath} type="image/png" />
           <script dangerouslySetInnerHTML={script} />
         </Head>
-        <body className="custom_class">
-          {this.props.customValue}
+        <body className={this.props.isDarkMode ? 'darkmode' : null}>
           <Main />
           <NextScript />
         </body>

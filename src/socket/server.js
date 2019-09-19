@@ -1,7 +1,7 @@
-const sequelizeStream = require('sequelize-stream')
 const cookieParser = require('cookie-parser')
 
-const logger = require('../util/logger')
+const sequelizeStream = require('./sequelizeStream')
+const { logger } = require('../util/logger')
 const { sequelize, Question, User, ActiveStaff, Queue } = require('../models')
 const { getUserFromJwt, getAuthzForUser } = require('../auth/util')
 const {
@@ -57,8 +57,11 @@ const sendInitialState = (
   })
 }
 
-const handleQuestionCreate = async (id, queueId) => {
-  const question = await Question.findOne({ where: { id } })
+const handleQuestionCreate = async (id, queueId, options) => {
+  const question = await Question.findOne({
+    where: { id },
+    transaction: options.transaction,
+  })
   queueNamespace.to(`queue-${queueId}`).emit('question:create', { question })
   // Public confidential queues only need to learn that a question was added
   queueNamespace
@@ -66,9 +69,10 @@ const handleQuestionCreate = async (id, queueId) => {
     .emit('question:create', { question: { id } })
 }
 
-const handleQuestionUpdate = async (id, queueId) => {
+const handleQuestionUpdate = async (id, queueId, options) => {
   const question = await Question.findOne({
     where: { id },
+    transaction: options.transaction,
   })
 
   // This is a workaround to https://github.com/sequelize/sequelize/issues/10552
@@ -94,17 +98,17 @@ const handleQuestionDelete = (id, queueId) => {
     .emit('question:delete', { id })
 }
 
-const handleQuestionEvent = (event, instance) => {
+const handleQuestionEvent = (event, instance, options) => {
   switch (event) {
     case 'create':
-      handleQuestionCreate(instance.id, instance.queueId)
+      handleQuestionCreate(instance.id, instance.queueId, options)
       break
     case 'update':
       if (instance.dequeueTime !== null) {
         // Treat this as a delete
         handleQuestionDelete(instance.id, instance.queueId)
       } else {
-        handleQuestionUpdate(instance.id, instance.queueId)
+        handleQuestionUpdate(instance.id, instance.queueId, options)
       }
       break
     default:
@@ -112,11 +116,12 @@ const handleQuestionEvent = (event, instance) => {
   }
 }
 
-const handleActiveStaffCreate = instance => {
+const handleActiveStaffCreate = (instance, options) => {
   const { id } = instance
   ActiveStaff.findOne({
     where: { id },
     include: [User],
+    transaction: options.transaction,
   }).then(activeStaff => {
     // TODO remove once we can fix https://github.com/illinois/queue/issues/92
     if (activeStaff === null) {
@@ -140,13 +145,13 @@ const handleActiveStaffDelete = (id, queueId) => {
     .emit('activeStaff:delete', { id })
 }
 
-const handleActiveStaffEvent = (event, instance) => {
+const handleActiveStaffEvent = (event, instance, options) => {
   // Too lazy to do this correctly for now
   if (!('queueId' in instance)) return
 
   switch (event) {
     case 'create':
-      handleActiveStaffCreate(instance)
+      handleActiveStaffCreate(instance, options)
       break
     case 'update':
       handleActiveStaffDelete(instance.id, instance.queueId)
@@ -156,19 +161,21 @@ const handleActiveStaffEvent = (event, instance) => {
   }
 }
 
-const handleQueueUpdate = id => {
-  Queue.findOne({ where: { id } }).then(queue => {
-    queueNamespace
-      .to(`queue-${id}`)
-      .to(`queue-${id}-public`)
-      .emit('queue:update', { id, queue })
-  })
+const handleQueueUpdate = (id, options) => {
+  Queue.findOne({ where: { id }, transaction: options.transaction }).then(
+    queue => {
+      queueNamespace
+        .to(`queue-${id}`)
+        .to(`queue-${id}-public`)
+        .emit('queue:update', { id, queue })
+    }
+  )
 }
 
-const handleQueueEvent = (event, instance) => {
+const handleQueueEvent = (event, instance, options) => {
   switch (event) {
     case 'update':
-      handleQueueUpdate(instance.id)
+      handleQueueUpdate(instance.id, options)
       break
     default:
     // Do nothing
@@ -184,14 +191,14 @@ const parseSocketCookies = () => {
 
 const stream = sequelizeStream(sequelize)
 stream.on('data', data => {
-  const { event, instance } = data
+  const { event, instance, options } = data
   // Need to have isConfidential in  question?
   if (instance instanceof Question) {
-    handleQuestionEvent(event, instance)
+    handleQuestionEvent(event, instance, options)
   } else if (instance instanceof ActiveStaff) {
-    handleActiveStaffEvent(event, instance)
+    handleActiveStaffEvent(event, instance, options)
   } else if (instance instanceof Queue) {
-    handleQueueEvent(event, instance)
+    handleQueueEvent(event, instance, options)
   }
 })
 
@@ -207,7 +214,7 @@ module.exports = newIo => {
     if (!user) {
       console.error('failed to authenticate socket')
       console.error(`jwt cookie present? ${!!jwtCookie}`)
-      next(new Error('Could not authenticate socket connection'))
+      next(new Error('Authentication error'))
     } else {
       // eslint-disable-next-line no-param-reassign
       socket.request.user = user
@@ -218,38 +225,48 @@ module.exports = newIo => {
   queueNamespace = io.of('/queue')
   queueNamespace.on('connection', socket => {
     socket.on('join', async (msg, callback) => {
-      if ('queueId' in msg) {
-        const { queueId } = msg
-        const queuePromise = Queue.findOne({
-          where: {
-            id: queueId,
-          },
-        })
-        const userAuthzPromise = getAuthzForUser(socket.request.user)
-        const [queue, userAuthz] = await Promise.all([
-          queuePromise,
-          userAuthzPromise,
-        ])
-        const { courseId, isConfidential } = queue
-        const isStudent = isUserStudent(userAuthz, courseId)
-        let sendCompleteQuestionData = true
-        if (isConfidential && isStudent) {
-          // All users that shouldn't see confidential information are added
-          // to a "public" version of the room that receives the minimum
-          // possible set of information
-          socket.join(`queue-${queueId}-public`)
-          // Users will also join a specific room for themselves so that they
-          // receive updates about questions being answered, etc.
-          socket.join(`queue-${queueId}-user-${socket.request.user.id}`)
-          sendCompleteQuestionData = false
-        } else {
-          // For non-confidential queues, this room will consider receiving all
-          // updates for all users. For confidential queues, only admins and
-          // course staff will be subscribed to this room
-          socket.join(`queue-${queueId}`)
+      try {
+        if ('queueId' in msg) {
+          const { queueId } = msg
+          const queuePromise = Queue.findOne({
+            where: {
+              id: queueId,
+            },
+          })
+          const userAuthzPromise = getAuthzForUser(socket.request.user)
+          const [queue, userAuthz] = await Promise.all([
+            queuePromise,
+            userAuthzPromise,
+          ])
+          if (!queue) {
+            // User tried to connect to a non-existent queue
+            return
+          }
+          const { courseId, isConfidential } = queue
+          const isStudent = isUserStudent(userAuthz, courseId)
+          let sendCompleteQuestionData = true
+          if (isConfidential && isStudent) {
+            // All users that shouldn't see confidential information are added
+            // to a "public" version of the room that receives the minimum
+            // possible set of information
+            socket.join(`queue-${queueId}-public`)
+            // Users will also join a specific room for themselves so that they
+            // receive updates about questions being answered, etc.
+            socket.join(`queue-${queueId}-user-${socket.request.user.id}`)
+            sendCompleteQuestionData = false
+          } else {
+            // For non-confidential queues, this room will consider receiving all
+            // updates for all users. For confidential queues, only admins and
+            // course staff will be subscribed to this room
+            socket.join(`queue-${queueId}`)
+          }
+          const { id: userId } = socket.request.user
+          sendInitialState(queueId, userId, sendCompleteQuestionData, callback)
         }
-        const { id: userId } = socket.request.user
-        sendInitialState(queueId, userId, sendCompleteQuestionData, callback)
+      } catch (err) {
+        logger.error('failed to initialize socket for message')
+        logger.error(err)
+        logger.error(msg)
       }
     })
   })

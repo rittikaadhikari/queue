@@ -1,70 +1,62 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
-import { ListGroupItem, Form, Input, Button } from 'reactstrap'
+import { Form, Button, InputGroup, InputGroupAddon } from 'reactstrap'
+import getConfig from 'next/config'
+import UserAutocomplete from './UserAutocomplete'
 
-class AddStaff extends React.Component {
-  constructor(props) {
-    super(props)
+const { uidName, uidArticle } = getConfig().publicRuntimeConfig
 
-    this.state = {
-      netid: '',
-    }
+const AddStaff = props => {
+  const [pendingUser, setPendingUser] = useState([])
 
-    this.handleInputChange = this.handleInputChange.bind(this)
-    this.handleAddStaff = this.handleAddStaff.bind(this)
-  }
-
-  handleInputChange(event) {
-    this.setState({
-      [event.target.name]: event.target.value,
-    })
-  }
-
-  handleAddStaff(e) {
+  const handleAddStaff = e => {
     if (e) e.preventDefault()
-    const staff = {
-      netid: this.state.netid,
-    }
-
-    this.props.onAddStaff(staff)
-
-    // Wipe the netid so more staff can be added
-    this.setState({ netid: '' })
+    props.onAddStaff(pendingUser[0].id)
   }
 
-  render() {
-    return (
-      <ListGroupItem>
-        <Form
-          autoComplete="off"
-          className="d-flex align-items-center"
-          style={{ flexWrap: 'nowrap' }}
-          onSubmit={e => this.handleAddStaff(e)}
-        >
-          <Input
-            type="text"
-            name="netid"
-            placeholder="Enter a NetID"
-            className="mr-3"
-            onChange={this.handleInputChange}
-            value={this.state.netid}
-          />
+  // We want to exclude existing staff from the autocompletion list
+  const filterBy = option => {
+    return props.existingStaff.findIndex(user => user === option.id) === -1
+  }
 
+  return (
+    <Form
+      autoComplete="off"
+      className="d-flex align-items-center"
+      style={{ flexWrap: 'nowrap' }}
+      onSubmit={handleAddStaff}
+    >
+      <InputGroup>
+        <UserAutocomplete
+          id="user-input"
+          selected={pendingUser}
+          onChange={setPendingUser}
+          placeholder={`Enter ${uidArticle} ${uidName}`}
+          filterBy={filterBy}
+        />
+        <InputGroupAddon addonType="append">
           <Button
             color="primary"
             type="button"
-            onClick={() => this.handleAddStaff()}
+            onClick={handleAddStaff}
+            disabled={pendingUser.length === 0}
           >
             Add staff
           </Button>
-        </Form>
-      </ListGroupItem>
-    )
-  }
+        </InputGroupAddon>
+      </InputGroup>
+    </Form>
+  )
 }
 
 AddStaff.propTypes = {
+  // This is just an array of user IDs (not UIDs)
+  existingStaff: PropTypes.arrayOf(PropTypes.number),
   onAddStaff: PropTypes.func.isRequired,
+}
+
+AddStaff.defaultProps = {
+  existingStaff: [],
 }
 
 export default AddStaff
