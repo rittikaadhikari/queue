@@ -1,10 +1,8 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { ListGroupItem, Button, Badge } from 'reactstrap'
-import { withBaseUrl } from '../util'
 import Moment from 'react-moment'
 import moment from 'moment'
-
 import ParrotText from './ParrotText'
 
 /* eslint-disable react/prefer-stateless-function */
@@ -145,7 +143,11 @@ class Question extends React.Component {
               {isUserCourseStaff && (
                 <span title="NetID" className="text-muted">
                   {' '}
-                  <a href={'https://google.com'} target="_blank">
+                  <a
+                    href="https://google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     ({askedBy.netid})
                   </a>
                 </span>
