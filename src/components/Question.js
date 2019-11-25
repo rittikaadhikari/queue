@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { ListGroupItem, Button, Badge } from 'reactstrap'
+import { withBaseUrl } from '../util'
 import Moment from 'react-moment'
 import moment from 'moment'
 
@@ -144,7 +145,9 @@ class Question extends React.Component {
               {isUserCourseStaff && (
                 <span title="NetID" className="text-muted">
                   {' '}
-                  ({askedBy.netid})
+                  <a href={'https://google.com'} target="_blank">
+                    ({askedBy.netid})
+                  </a>
                 </span>
               )}
             </strong>
